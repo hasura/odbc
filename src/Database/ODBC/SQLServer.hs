@@ -496,7 +496,7 @@ renderedAndParams q = (renderParts parts', params)
            ValuePart v
              | Just {} <- valueToParam v ->
                case v of
-                 TextValue t -> TextPart "CAST(? AS NVARCHAR(MAX))"
+                 TextValue _ -> TextPart "CAST(? AS NVARCHAR(MAX))"
                  _ -> TextPart "?"
            p -> p)
         parts
@@ -539,7 +539,7 @@ renderValue :: Value -> Text
 renderValue =
   \case
     NullValue -> "NULL"
-    TextValue t -> "(N'" <> T.concatMap escapeChar t <> "')"
+    TextValue t -> "CAST(N'" <> T.concatMap escapeChar t <> "' AS NVARCHAR(MAX))"
     BinaryValue (Internal.Binary bytes) ->
       "0x" <>
       T.concat
@@ -548,7 +548,7 @@ renderValue =
               (Formatting.left 2 '0' Formatting.%. Formatting.hex))
            (S.unpack bytes))
     ByteStringValue xs ->
-      "('" <> T.concat (map escapeChar8 (S.unpack xs)) <> "')"
+      "'" <> T.concat (map escapeChar8 (S.unpack xs)) <> "'"
     BoolValue True -> "1"
     BoolValue False -> "0"
     ByteValue n -> Formatting.sformat Formatting.int n
